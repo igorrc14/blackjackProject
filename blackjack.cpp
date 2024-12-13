@@ -1,6 +1,7 @@
 #include <iostream>
 #include <ctime>
 #include <cstdlib>
+#include <algorithm>
 using namespace std;
 
 struct Card {
@@ -21,7 +22,7 @@ void deckCreation(Card cards[52]) {
     }
 }
 
-void distributeInicialCards(Card * card1, Card * card2, Card cards[52], int inGameCards[16], int * count, int userCards[11], int * countUser) {
+void distributeInicialCards(Card * card1, Card * card2, Card cards[52], bool inGameCards[52], int userCards[11], int * countUser) {
     srand(time(0));
     int randomNum1 = rand() % 52;
     int randomNum2 = rand() % 52;
@@ -32,13 +33,11 @@ void distributeInicialCards(Card * card1, Card * card2, Card cards[52], int inGa
     *card1 = cards[randomNum1];
     *card2 = cards[randomNum2];
     
-    inGameCards[*count] = randomNum1;
+    inGameCards[randomNum1] = true;
     userCards[*countUser] = randomNum1;
-    (*count)++;
     (*countUser)++;
-    inGameCards[*count] = randomNum2;
+    inGameCards[randomNum2] = true;
     userCards[*countUser] = randomNum2;
-    (*count)++;
     (*countUser)++;
 }
 
@@ -65,11 +64,22 @@ void calculateSum(int * sum, int userCards[11], Card cards[52], int * countUser)
     }
 }
 
-void hitNewCard(int * count, int inGameCards[16], Card cards[52],int userCards[11], int * countUser) {
- // For some reason it suddently stopped working;
- // TODO;
+void hitNewCard (bool inGameCards[52], Card cards[52], int userCards[11], int * countUser) {
+    srand(time(0));
+    int randomNum;
+    do {
+        randomNum = rand() % 52;
+    } while (inGameCards[randomNum] == true);  
+    
+    inGameCards[randomNum] = true;
+    
+    userCards[*countUser] = randomNum;
+    (*countUser)++;
+    
+    printCard(cards[randomNum]);
 }
-void newRound(int * count,int inGameCards[16], Card cards[52],int userCards[11], int * countUser, int * sum) {
+
+void newRound(bool inGameCards[16], Card cards[52],int userCards[11], int * countUser, int * sum) {
     int choice;
     cout<<endl<<"1 - Hit"<<endl;
     cout<<"2 - Stand"<<endl;
@@ -77,8 +87,9 @@ void newRound(int * count,int inGameCards[16], Card cards[52],int userCards[11],
     cin>>choice;
     switch (choice) {
         case 1:
-            hitNewCard(count, inGameCards, cards, userCards, countUser);
-            calculateSum(sum, userCards,cards, count);
+            hitNewCard(inGameCards, cards, userCards, countUser);
+            calculateSum(sum, userCards,cards, countUser);
+            cout<<"TOTAL: "<<*sum<<endl;
         break;
         case 2:
             //dealer's turn;
@@ -87,23 +98,26 @@ void newRound(int * count,int inGameCards[16], Card cards[52],int userCards[11],
 }
 
 int main() {
-    int sum = 0, count = 0, countUser = 0, inGameCards[16], userCards[11];
+    bool inGameCards[52];
+    for (int i = 0; i<52; i++) {
+        inGameCards[i] = false;
+    }
+    int sum = 0, countUser = 0, userCards[11];
     Card card1, card2, cards[52];
     deckCreation(cards);
     // Blackjack Game: Round 1
-    distributeInicialCards(&card1,&card2,cards,inGameCards,&count,userCards, &countUser);
+    distributeInicialCards(&card1,&card2,cards,inGameCards,userCards, &countUser);
 
     printCard(card1);
     printCard(card2);
 
-    calculateSum(&sum, userCards,cards, &count);
+    calculateSum(&sum, userCards,cards,&countUser);
     cout<<"TOTAL: "<<sum<<endl;
     if (checkWin(&sum)) {
         return 0;
     }
     // Blackjack Game: Round 2
-    newRound(&count, inGameCards, cards, userCards,&countUser, &sum);
-    cout<<"TOTAL: "<<sum<<endl;
+    newRound(inGameCards, cards, userCards,&countUser, &sum);
     if (checkWin(&sum)) {
         return 0;
     }
