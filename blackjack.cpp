@@ -1,4 +1,6 @@
 #include <iostream>
+#include <ctime>
+#include <cstdlib>
 using namespace std;
 
 struct Card {
@@ -8,70 +10,82 @@ struct Card {
 };
 
 void deckCreation(Card cards[52]) {
-    // Hearts
-    cards[0] = {2, "hearts", "2"};
-    cards[1] = {3, "hearts", "3"};
-    cards[2] = {4, "hearts", "4"};
-    cards[3] = {5, "hearts", "5"};
-    cards[4] = {6, "hearts", "6"};
-    cards[5] = {7, "hearts", "7"};
-    cards[6] = {8, "hearts", "8"};
-    cards[7] = {9, "hearts", "9"};
-    cards[8] = {10, "hearts", "10"};
-    cards[9] = {10, "hearts", "Jack"};
-    cards[10] = {10, "hearts", "Queen"};
-    cards[11] = {10, "hearts", "King"};
-    cards[12] = {1, "hearts", "Ace"};
+    string suits[] = {"hearts", "diamonds", "spades", "clubs"};
+    string faces[] = {"2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King", "Ace"};
+    int values[] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11};
 
-    // Diamonds
-    cards[13] = {2, "diamonds", "2"};
-    cards[14] = {3, "diamonds", "3"};
-    cards[15] = {4, "diamonds", "4"};
-    cards[16] = {5, "diamonds", "5"};
-    cards[17] = {6, "diamonds", "6"};
-    cards[18] = {7, "diamonds", "7"};
-    cards[19] = {8, "diamonds", "8"};
-    cards[20] = {9, "diamonds", "9"};
-    cards[21] = {10, "diamonds", "10"};
-    cards[22] = {10, "diamonds", "Jack"};
-    cards[23] = {10, "diamonds", "Queen"};
-    cards[24] = {10, "diamonds", "King"};
-    cards[25] = {1, "diamonds", "Ace"};
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 13; j++) {
+            cards[i * 13 + j] = {values[j], suits[i], faces[j]};
+        }
+    }
+}
 
-    // Spades
-    cards[26] = {2, "spades", "2"};
-    cards[27] = {3, "spades", "3"};
-    cards[28] = {4, "spades", "4"};
-    cards[29] = {5, "spades", "5"};
-    cards[30] = {6, "spades", "6"};
-    cards[31] = {7, "spades", "7"};
-    cards[32] = {8, "spades", "8"};
-    cards[33] = {9, "spades", "9"};
-    cards[34] = {10, "spades", "10"};
-    cards[35] = {10, "spades", "Jack"};
-    cards[36] = {10, "spades", "Queen"};
-    cards[37] = {10, "spades", "King"};
-    cards[38] = {1, "spades", "Ace"};
+void distributeCards(Card * card1, Card * card2, Card cards[52]) {
+    srand(time(0));
+    int randomNum1 = rand() % 52;
+    int randomNum2 = rand() % 52;
 
-    // Clubs
-    cards[39] = {2, "clubs", "2"};
-    cards[40] = {3, "clubs", "3"};
-    cards[41] = {4, "clubs", "4"};
-    cards[42] = {5, "clubs", "5"};
-    cards[43] = {6, "clubs", "6"};
-    cards[44] = {7, "clubs", "7"};
-    cards[45] = {8, "clubs", "8"};
-    cards[46] = {9, "clubs", "9"};
-    cards[47] = {10, "clubs", "10"};
-    cards[48] = {10, "clubs", "Jack"};
-    cards[49] = {10, "clubs", "Queen"};
-    cards[50] = {10, "clubs", "King"};
-    cards[51] = {1, "clubs", "Ace"};
+    while (randomNum1 == randomNum2) {
+        randomNum2 = rand() % 52;
+    }
+    *card1 = cards[randomNum1];
+    *card2 = cards[randomNum2];
+}
+
+void checkInicialAces(Card * card1, Card * card2, bool * firstIsAce, bool * secondIsAce) {
+    if (card1->face == "Ace") {
+        *firstIsAce = true;
+    }
+    if (card2->face == "Ace") {
+        *secondIsAce = true;
+    }
+}
+
+bool checkWin(int * sum) {
+    if (*sum == 21) {
+        cout<<"You won!"<<endl;
+        return true;
+    }
+    return false;
+}
+
+void calculateSum(int * sum, Card * card1, Card * card2) {
+    *sum = card1->value+card2->value;
+    if (*sum>21 && (card1->face == "Ace" || card2->face == "Ace")) {
+        *sum -= 10;
+    }
+    cout<<"TOTAL: "<<*sum<<endl;
+}
+
+void printCard (Card card) {
+    if (card.face == "Ace") {
+        cout<<card.face<<" of "<<card.suit<<" | Value: 1 or 11"<<endl;
+        return;
+    }
+    cout<<card.face<<" of "<<card.suit<<" | Value: "<<card.value<<endl;
 }
 
 int main() {
-    Card cards[52];
+    bool firstIsAce = false;
+    bool secondIsAce = false;
+    int sum = 0, choice = 0;
+    Card card1, card2, cards[52];
     deckCreation(cards);
-    
+    // Blackjack Game: Round 1
+    distributeCards(&card1,&card2,cards);
+
+    checkInicialAces(&card1,&card2,&firstIsAce,&secondIsAce);
+
+    printCard(card1);
+    printCard(card2);
+
+    calculateSum(&sum, &card1, &card2);
+    if (checkWin(&sum)) {
+        return 0;
+    }
+    // Blackjack Game: Round 2
+
+
     return 0;
 }
