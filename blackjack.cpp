@@ -84,23 +84,48 @@ void hitNewCard (bool inGameCards[52], Card cards[52], int userCards[11], int * 
     }
 }
 
+void showDealerCards(int dealerCards[5], Card cards[52], int *countDealer) {
+    for (int i = 0; i < *countDealer; i++) {
+        printCard(cards[dealerCards[i]]);
+    }
+}
+
+void dealerNewCard(bool inGameCards[52], Card cards[52], int dealerCards[5], int * countDealer ) {
+    int randomNum;
+    do {
+        randomNum = rand() % 52;
+    } while (inGameCards[randomNum] == true);
+
+    inGameCards[randomNum] = true;
+
+    dealerCards[*countDealer] = randomNum;
+    (*countDealer)++;
+
+    showDealerCards(dealerCards,cards,countDealer);
+}
+
 int main() {
     srand(time(0));
-    bool inGameCards[52], busted = false;
+    bool inGameCards[52], busted = false, dealerBusted = false;
     for (int i = 0; i<52; i++) {
         inGameCards[i] = false;
     }
-    int sum = 0, countUser = 0, userCards[11], choice = 1;
-    Card card1, card2, cards[52];
+    int sum = 0, countUser = 0, userCards[11], choice = 1, dealerSum = 0, dealerCards[5], countDealer = 0;
+    Card card1, card2, dealerCard, cards[52];
     deckCreation(cards);
     // Blackjack Game: Round 1;
     distributeInicialCards(&card1,&card2,cards,inGameCards,userCards, &countUser);
-
     printCard(card1);
     printCard(card2);
 
     calculateSum(&sum, userCards,cards,&countUser, &busted);
     cout<<"TOTAL: "<<sum<<endl;
+    cout<<"============================="<<endl;
+    cout<<"Dealer: "<<endl;
+    dealerNewCard(inGameCards,cards,dealerCards,&countDealer);
+    calculateSum(&dealerSum,dealerCards,cards,&countDealer, &dealerBusted);
+    cout<<endl<<"DEALER TOTAL: "<<dealerSum<<endl;
+    cout<<"============================="<<endl;
     if (checkWin(&sum)) {
         cout<<"You won!"<<endl;
         return 0;
@@ -117,14 +142,23 @@ int main() {
             hitNewCard(inGameCards, cards, userCards, &countUser);
             calculateSum(&sum, userCards,cards, &countUser, &busted);
             cout<<"TOTAL: "<<sum<<endl;
-            if (checkWin(&sum)) {
-                cout<<"You won!"<<endl;
-                break;
-            }
-
+            cout<<"============================="<<endl;
+            cout<<"Dealer: "<<endl;
+            showDealerCards(dealerCards,cards, &countDealer);
+            cout<<endl<<"DEALER TOTAL: "<<dealerSum<<endl<<endl;
+            if (sum == 21) choice = 2;
         }
         if (choice == 2) {
-            //dealer's turn
+            while (dealerSum < 17 || dealerSum < sum) {
+                cout<<"Dealer: "<<endl;
+                dealerNewCard(inGameCards,cards,dealerCards,&countDealer);
+                calculateSum(&dealerSum,dealerCards,cards,&countDealer, &dealerBusted);
+                cout<<"DEALER TOTAL: "<<dealerSum<<endl<<endl;
+            }
+            if (dealerSum > 21) {
+                cout<<"Dealer busted! You Won!"<<endl;;
+            }
+            else cout<<"You Lost!"<<endl;
         }
         if (choice == 3) {
             cout<<"You lost!";
