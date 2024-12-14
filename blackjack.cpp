@@ -1,7 +1,6 @@
 #include <iostream>
 #include <ctime>
 #include <cstdlib>
-#include <algorithm>
 using namespace std;
 
 struct Card {
@@ -23,7 +22,6 @@ void deckCreation(Card cards[52]) {
 }
 
 void distributeInicialCards(Card * card1, Card * card2, Card cards[52], bool inGameCards[52], int userCards[11], int * countUser) {
-    srand(time(0));
     int randomNum1 = rand() % 52;
     int randomNum2 = rand() % 52;
 
@@ -32,7 +30,7 @@ void distributeInicialCards(Card * card1, Card * card2, Card cards[52], bool inG
     }
     *card1 = cards[randomNum1];
     *card2 = cards[randomNum2];
-    
+
     inGameCards[randomNum1] = true;
     userCards[*countUser] = randomNum1;
     (*countUser)++;
@@ -43,7 +41,6 @@ void distributeInicialCards(Card * card1, Card * card2, Card cards[52], bool inG
 
 bool checkWin(int * sum) {
     if (*sum == 21) {
-        cout<<"You won!"<<endl;
         return true;
     }
     return false;
@@ -57,69 +54,88 @@ void printCard (Card card) {
     cout<<card.face<<" of "<<card.suit<<" | Value: "<<card.value<<endl;
 }
 
-void calculateSum(int * sum, int userCards[11], Card cards[52], int * countUser) {
+void calculateSum(int * sum, int userCards[11], Card cards[52], int * countUser, bool * busted) {
     *sum = 0;
     for (int i=0;i<*countUser; i++) {
         *sum += cards[userCards[i]].value;
+        if (*sum > 21 && cards[userCards[i]].face == "Ace") {
+            *sum-=10;
+        }
+    }
+    if (*sum > 21) {
+        cout<<"Busted!"<<endl;
+        *busted = true;
     }
 }
 
 void hitNewCard (bool inGameCards[52], Card cards[52], int userCards[11], int * countUser) {
-    srand(time(0));
     int randomNum;
     do {
         randomNum = rand() % 52;
-    } while (inGameCards[randomNum] == true);  
-    
+    } while (inGameCards[randomNum] == true);
+
     inGameCards[randomNum] = true;
-    
+
     userCards[*countUser] = randomNum;
     (*countUser)++;
-    
-    printCard(cards[randomNum]);
-}
 
-void newRound(bool inGameCards[16], Card cards[52],int userCards[11], int * countUser, int * sum) {
-    int choice;
-    cout<<endl<<"1 - Hit"<<endl;
-    cout<<"2 - Stand"<<endl;
-    cout<<"Select: ";
-    cin>>choice;
-    switch (choice) {
-        case 1:
-            hitNewCard(inGameCards, cards, userCards, countUser);
-            calculateSum(sum, userCards,cards, countUser);
-            cout<<"TOTAL: "<<*sum<<endl;
-        break;
-        case 2:
-            //dealer's turn;
-        break;
+    for (int i = 0; i < *countUser; i++) {
+        printCard(cards[userCards[i]]);
     }
 }
 
 int main() {
-    bool inGameCards[52];
+    srand(time(0));
+    bool inGameCards[52], busted = false;
     for (int i = 0; i<52; i++) {
         inGameCards[i] = false;
     }
-    int sum = 0, countUser = 0, userCards[11];
+    int sum = 0, countUser = 0, userCards[11], choice = 1;
     Card card1, card2, cards[52];
     deckCreation(cards);
-    // Blackjack Game: Round 1
+    // Blackjack Game: Round 1;
     distributeInicialCards(&card1,&card2,cards,inGameCards,userCards, &countUser);
 
     printCard(card1);
     printCard(card2);
 
-    calculateSum(&sum, userCards,cards,&countUser);
+    calculateSum(&sum, userCards,cards,&countUser, &busted);
     cout<<"TOTAL: "<<sum<<endl;
     if (checkWin(&sum)) {
+        cout<<"You won!"<<endl;
         return 0;
     }
-    // Blackjack Game: Round 2
-    newRound(inGameCards, cards, userCards,&countUser, &sum);
-    if (checkWin(&sum)) {
-        return 0;
+    // Blackjack Game: Round 2 and over;
+    while (choice < 2) {
+        cout<<endl<<"1 - Hit"<<endl;
+        cout<<"2 - Stand"<<endl;
+        cout<<"3 - Surrender"<<endl;
+        cout<<"Select: ";
+        cin>>choice;
+        cout<<endl;
+        if (choice == 1) {
+            hitNewCard(inGameCards, cards, userCards, &countUser);
+            calculateSum(&sum, userCards,cards, &countUser, &busted);
+            cout<<"TOTAL: "<<sum<<endl;
+            if (checkWin(&sum)) {
+                cout<<"You won!"<<endl;
+                break;
+            }
+
+        }
+        if (choice == 2) {
+            //dealer's turn
+        }
+        if (choice == 3) {
+            cout<<"You lost!";
+        }
+        if (choice < 1 || choice > 3) {
+            cout<<endl<<"Invalid option. Try again!";
+        }
+        if (busted) {
+            break;
+        }
     }
+
     return 0;
 }
