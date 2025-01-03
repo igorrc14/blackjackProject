@@ -103,16 +103,54 @@ void dealerNewCard(bool inGameCards[52], Card cards[52], int dealerCards[5], int
     showDealerCards(dealerCards,cards,countDealer);
 }
 
+double placeBet(double * balance) {
+    double bet;
+    do {
+        cout<<"Balance: "<<*balance<<"$"<<endl;
+        cout<<"Place bet: ";
+        cin>>bet;
+        if (bet>*balance) {
+            cout<<"Insufficient balance! Try again!"<<endl<<endl;
+        }
+        if (bet<1) {
+            cout<<"The minimum bet is 1$"<<endl<<endl;
+        }
+    } while (bet>*balance || bet<1);
+    cout<<endl;
+    return bet;
+}
+
+void checkWin(int playerSum, int dealerSum, double *balance, double bet, bool playerBusted, bool dealerBusted) {
+    if (playerBusted) {
+        cout << "Busted!" << endl;
+        *balance -= bet;
+    } else if (dealerBusted) {
+        cout << "Dealer busted! You won!" << endl;
+        *balance += bet;
+    } else if (dealerSum > playerSum) {
+        cout << "You lost! Dealer wins." << endl;
+        *balance -= bet;
+    } else if (dealerSum == playerSum) {
+        cout << "It's a tie!" << endl;
+    } else {
+        cout << "You won!" << endl;
+        *balance += bet;
+    }
+    cout<<"Balance: "<<*balance<<endl<<endl;
+}
+
 int main() {
     srand(time(0));
     bool playAgain = true;
+    double balance = 1000;
 
     while (playAgain) {
+        int sum = 0, countUser = 0, userCards[11], choice = 1, dealerSum = 0, dealerCards[5], countDealer = 0;
+        double bet = placeBet(&balance);
         bool inGameCards[52], busted = false, dealerBusted = false;
         for (int i = 0; i < 52; i++) {
             inGameCards[i] = false;
         }
-        int sum = 0, countUser = 0, userCards[11], choice = 1, dealerSum = 0, dealerCards[5], countDealer = 0;
         Card card1, card2, dealerCard, cards[52];
         deckCreation(cards);
 
@@ -151,8 +189,8 @@ int main() {
                 showDealerCards(dealerCards, cards, &countDealer);
                 cout<<"DEALER TOTAL: " << dealerSum <<endl<<endl;
                 if (sum == 21) choice = 2;
-                if (sum > 21) {
-                    cout<<"You lost!"<<endl;
+                if (busted) {
+                    break;
                 }
             }
             if (choice == 2) {
@@ -161,21 +199,7 @@ int main() {
                     dealerNewCard(inGameCards, cards, dealerCards, &countDealer);
                     calculateSum(&dealerSum, dealerCards, cards, &countDealer, &dealerBusted);
                     cout<<"DEALER TOTAL: " << dealerSum << endl << endl;
-                }
-
-                if (countDealer == 5 && dealerSum == 21) {
-                    cout<<"You lost!" << endl;
-                    break;
-                }
-
-                if (dealerSum > 21) {
-                    cout<<"Dealer busted! You Won!" << endl;
-                } else if (dealerSum > sum) {
-                    cout<<"You Lost!" << endl;
-                } else if (dealerSum == sum) {
-                    cout<<"It's a tie!" << endl;
-                } else {
-                    cout<<"You won!" << endl;
+                    if (busted) break;
                 }
             }
             if (choice == 3) {
@@ -184,9 +208,11 @@ int main() {
             if (choice < 1 || choice > 3) {
                 cout<<endl << "Invalid option. Try again!";
             }
-            if (busted) {
-                break;
-            }
+        }
+        checkWin(sum, dealerSum,&balance,bet,busted,dealerBusted);
+        if (balance == 0) {
+            cout<<"You ran out of balance! Game over!"<<endl;
+            break;
         }
         cout<<endl << "Do you want to play again?\n1 - Yes" << endl;
         cout<<"2 - No" << endl;
